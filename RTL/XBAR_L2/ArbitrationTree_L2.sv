@@ -12,7 +12,9 @@ module ArbitrationTree_L2
 #(
    parameter ADDR_WIDTH = 12,
    parameter DATA_WIDTH = 64,
-   parameter BE_WIDTH   = DATA_WIDTH/8,
+   parameter BYTE_NUM   = DATA_WIDTH/8,
+   parameter BE_WIDTH   = BYTE_NUM,
+   parameter TAG_WIDTH  = BYTE_NUM,
    parameter ID_WIDTH   = 20,
    parameter N_MASTER   = 16,
    parameter MAX_COUNT  = N_MASTER
@@ -26,6 +28,7 @@ module ArbitrationTree_L2
    input  logic [N_MASTER-1:0][ADDR_WIDTH-1:0]       data_add_i,
    input  logic [N_MASTER-1:0]                       data_wen_i,
    input  logic [N_MASTER-1:0][DATA_WIDTH-1:0]       data_wdata_i,
+   input  logic [N_MASTER-1:0][TAG_WIDTH-1:0]        data_wtag_i,
    input  logic [N_MASTER-1:0][BE_WIDTH-1:0]         data_be_i,
    input  logic [N_MASTER-1:0][ID_WIDTH-1:0]         data_ID_i,
    output logic [N_MASTER-1:0]                       data_gnt_o,
@@ -35,6 +38,7 @@ module ArbitrationTree_L2
    output logic [ADDR_WIDTH-1:0]                     data_add_o,
    output logic                                      data_wen_o,
    output logic [DATA_WIDTH-1:0]                     data_wdata_o,
+   output logic [TAG_WIDTH-1:0]                      data_wtag_o,
    output logic [BE_WIDTH-1:0]                       data_be_o,
    output logic [ID_WIDTH-1:0]                       data_ID_o,
    input  logic                                      data_gnt_i
@@ -57,7 +61,8 @@ module ArbitrationTree_L2
                         .ADDR_WIDTH ( ADDR_WIDTH ),
                         .ID_WIDTH   ( ID_WIDTH   ),
                         .DATA_WIDTH ( DATA_WIDTH ),
-                        .BE_WIDTH   ( BE_WIDTH   )
+                        .BE_WIDTH   ( BE_WIDTH   ),
+                        .TAG_WIDTH  ( TAG_WIDTH  )
                      )
                      FAN_IN_REQ
                      (
@@ -65,6 +70,8 @@ module ArbitrationTree_L2
                         // LEFT SIDE"
                         .data_wdata0_i ( data_wdata_i[0] ),
                         .data_wdata1_i ( data_wdata_i[1] ),
+                        .data_wtag0_i  ( data_wtag_i [0] ),
+                        .data_wtag1_i  ( data_wtag_i [1] ),
                         .data_add0_i   ( data_add_i  [0] ),
                         .data_add1_i   ( data_add_i  [1] ),
                         .data_req0_i   ( data_req_i  [0] ),
@@ -81,6 +88,7 @@ module ArbitrationTree_L2
 
                         // RIGTH SIDE"
                         .data_wdata_o  ( data_wdata_o    ),
+                        .data_wtag_o   ( data_wtag_o     ),
                         .data_add_o    ( data_add_o      ),
                         .data_req_o    ( data_req_o      ),
                         .data_wen_o    ( data_wen_o      ),
@@ -95,6 +103,7 @@ module ArbitrationTree_L2
             //// -------               REQ ARBITRATION TREE WIRES           ----------- ////
             //// ---------------------------------------------------------------------- ////
             logic [DATA_WIDTH-1:0]              data_wdata_LEVEL[N_WIRE-1:0];
+            logic [TAG_WIDTH-1:0]               data_wtag_LEVEL[N_WIRE-1:0];
             logic [ADDR_WIDTH-1:0]              data_add_LEVEL[N_WIRE-1:0];
             logic                               data_req_LEVEL[N_WIRE-1:0];
             logic                               data_wen_LEVEL[N_WIRE-1:0];
@@ -116,7 +125,8 @@ module ArbitrationTree_L2
                               .ADDR_WIDTH  ( ADDR_WIDTH   ),
                               .ID_WIDTH    ( ID_WIDTH     ),
                               .DATA_WIDTH  ( DATA_WIDTH   ),
-                              .BE_WIDTH    ( BE_WIDTH     )
+                              .BE_WIDTH    ( BE_WIDTH     ),
+                              .TAG_WIDTH   ( TAG_WIDTH    )
                           )
                           FAN_IN_REQ
                           (
@@ -124,6 +134,8 @@ module ArbitrationTree_L2
                              // LEFT SIDE
                              .data_wdata0_i ( data_wdata_LEVEL [2*k]   ),
                              .data_wdata1_i ( data_wdata_LEVEL [2*k+1] ),
+                             .data_wtag0_i  ( data_wtag_LEVEL [2*k]    ),
+                             .data_wtag1_i  ( data_wtag_LEVEL [2*k+1]  ),
                              .data_add0_i   ( data_add_LEVEL   [2*k]   ),
                              .data_add1_i   ( data_add_LEVEL   [2*k+1] ),
                              .data_req0_i   ( data_req_LEVEL   [2*k]   ),
@@ -138,6 +150,7 @@ module ArbitrationTree_L2
                              .data_gnt1_o   ( data_gnt_LEVEL   [2*k+1] ),
                              // RIGTH SIDE
                              .data_wdata_o  ( data_wdata_o             ),
+                             .data_wtag_o   ( data_wtag_o              ),
                              .data_add_o    ( data_add_o               ),
                              .data_req_o    ( data_req_o               ),
                              .data_wen_o    ( data_wen_o               ),
@@ -153,7 +166,8 @@ module ArbitrationTree_L2
                                     .ADDR_WIDTH ( ADDR_WIDTH ),
                                     .ID_WIDTH   ( ID_WIDTH   ),
                                     .DATA_WIDTH ( DATA_WIDTH ),
-                                    .BE_WIDTH   ( BE_WIDTH   )
+                                    .BE_WIDTH   ( BE_WIDTH   ),
+                                    .TAG_WIDTH  ( TAG_WIDTH  )
                                   )
                                   FAN_IN_REQ
                                   (
@@ -161,6 +175,8 @@ module ArbitrationTree_L2
                                     // LEFT SIDE
                                     .data_wdata0_i ( data_wdata_LEVEL [((2**j)*2-2) + 2*k]    ),
                                     .data_wdata1_i ( data_wdata_LEVEL [((2**j)*2-2) + 2*k+1]  ),
+                                    .data_wtag0_i  ( data_wtag_LEVEL  [((2**j)*2-2) + 2*k]    ),
+                                    .data_wtag1_i  ( data_wtag_LEVEL  [((2**j)*2-2) + 2*k+1]  ),
                                     .data_add0_i   ( data_add_LEVEL   [((2**j)*2-2) + 2*k]    ),
                                     .data_add1_i   ( data_add_LEVEL   [((2**j)*2-2) + 2*k+1]  ),
                                     .data_req0_i   ( data_req_LEVEL   [((2**j)*2-2) + 2*k]    ),
@@ -177,6 +193,7 @@ module ArbitrationTree_L2
 
                                     // RIGTH SIDE
                                     .data_wdata_o ( data_wdata_LEVEL [((2**(j-1))*2-2) + k]  ),
+                                    .data_wtag_o  ( data_wtag_LEVEL  [((2**(j-1))*2-2) + k]  ),
                                     .data_add_o   ( data_add_LEVEL   [((2**(j-1))*2-2) + k]  ),
                                     .data_req_o   ( data_req_LEVEL   [((2**(j-1))*2-2) + k]  ),
                                     .data_wen_o   ( data_wen_LEVEL   [((2**(j-1))*2-2) + k]  ),
@@ -192,7 +209,8 @@ module ArbitrationTree_L2
                                     .ADDR_WIDTH ( ADDR_WIDTH ),
                                     .ID_WIDTH   ( ID_WIDTH   ),
                                     .DATA_WIDTH ( DATA_WIDTH ),
-                                    .BE_WIDTH   ( BE_WIDTH   )
+                                    .BE_WIDTH   ( BE_WIDTH   ),
+                                    .TAG_WIDTH  ( TAG_WIDTH  )
                                   )
                                   FAN_IN_REQ
                                   (
@@ -200,6 +218,8 @@ module ArbitrationTree_L2
                                      // LEFT SIDE
                                      .data_wdata0_i  ( data_wdata_i [2*k]                      ),
                                      .data_wdata1_i  ( data_wdata_i [2*k+1]                    ),
+                                     .data_wtag0_i   ( data_wtag_i [2*k]                       ),
+                                     .data_wtag1_i   ( data_wtag_i [2*k+1]                     ),
                                      .data_add0_i    ( data_add_i   [2*k]                      ),
                                      .data_add1_i    ( data_add_i   [2*k+1]                    ),
                                      .data_req0_i    ( data_req_i   [2*k]                      ),
@@ -215,6 +235,7 @@ module ArbitrationTree_L2
 
                                      // RIGTH SIDE
                                      .data_wdata_o  ( data_wdata_LEVEL [((2**(j-1))*2-2) + k]  ),
+                                     .data_wtag_o   ( data_wtag_LEVEL [((2**(j-1))*2-2) + k]   ),
                                      .data_add_o    ( data_add_LEVEL   [((2**(j-1))*2-2) + k]  ),
                                      .data_req_o    ( data_req_LEVEL   [((2**(j-1))*2-2) + k]  ),
                                      .data_wen_o    ( data_wen_LEVEL   [((2**(j-1))*2-2) + k]  ),

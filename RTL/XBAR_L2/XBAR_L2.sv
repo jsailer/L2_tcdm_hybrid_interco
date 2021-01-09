@@ -15,7 +15,9 @@ module XBAR_L2
    parameter ADDR_MEM_WIDTH   = 12,
    parameter N_SLAVE          = 4,
    parameter DATA_WIDTH       = 64,
-   parameter BE_WIDTH         = DATA_WIDTH/8,
+   parameter BYTE_NUM         = DATA_WIDTH/8,
+   parameter BE_WIDTH         = BYTE_NUM,
+   parameter TAG_WIDTH        = BYTE_NUM,
 
    parameter ID_WIDTH         = N_CH0+N_CH1,
    parameter N_MASTER         = N_CH0+N_CH1,
@@ -28,11 +30,13 @@ module XBAR_L2
    input  logic [N_MASTER-1:0][ADDR_IN_WIDTH-1:0]          data_add_i,             // Data request Address {memory ROW , BANK}
    input  logic [N_MASTER-1:0]                             data_wen_i,             // Data request wen : 0--> Store, 1 --> Load
    input  logic [N_MASTER-1:0][DATA_WIDTH-1:0]             data_wdata_i,           // Data request Write data
+   input  logic [N_MASTER-1:0][TAG_WIDTH-1:0]              data_wtag_i,            // Data request Write tag
    input  logic [N_MASTER-1:0][BE_WIDTH-1:0]               data_be_i,              // Data request Byte enable
    output logic [N_MASTER-1:0]                             data_gnt_o,             // Data request Grant
    // Resp
    output logic [N_MASTER-1:0]                             data_r_valid_o,         // Data Response Valid (For LOAD/STORE commands)
    output logic [N_MASTER-1:0][DATA_WIDTH-1:0]             data_r_rdata_o,         // Data Response DATA (For LOAD commands)
+   output logic [N_MASTER-1:0][TAG_WIDTH-1:0]              data_r_rtag_o,          // Data Response TAG (For LOAD commands)
 
 
    // ---------------- MM_SIDE (Interleaved) --------------------------
@@ -41,10 +45,12 @@ module XBAR_L2
    output  logic [N_SLAVE-1:0][ADDR_MEM_WIDTH-1:0]         data_add_o,             // Data request Address
    output  logic [N_SLAVE-1:0]                             data_wen_o ,            // Data request wen : 0--> Store, 1 --> Load
    output  logic [N_SLAVE-1:0][DATA_WIDTH-1:0]             data_wdata_o,           // Data request Wrire data
+   output  logic [N_SLAVE-1:0][TAG_WIDTH-1:0]              data_wtag_o,            // Data request Wrire tag
    output  logic [N_SLAVE-1:0][BE_WIDTH-1:0]               data_be_o,              // Data request Byte enable
    output  logic [N_SLAVE-1:0][ID_WIDTH-1:0]               data_ID_o,
    // Resp --> From Mem
    input   logic [N_SLAVE-1:0][DATA_WIDTH-1:0]             data_r_rdata_i,         // Data Response DATA (For LOAD commands)
+   input   logic [N_SLAVE-1:0][TAG_WIDTH-1:0]              data_r_rtag_i,          // Data Response TAG (For LOAD commands)
    input   logic [N_SLAVE-1:0]                             data_r_valid_i,         // Data Response: Command is Committed
    input   logic [N_SLAVE-1:0][ID_WIDTH-1:0]               data_r_ID_i,            // Data Response ID: To backroute Response
 
@@ -112,7 +118,8 @@ module XBAR_L2
                       .N_CH0      ( N_CH0           ),
                       .ID_WIDTH   ( ID_WIDTH        ),
                       .DATA_WIDTH ( DATA_WIDTH      ),
-                      .BE_WIDTH   ( BE_WIDTH        )
+                      .BE_WIDTH   ( BE_WIDTH        ),
+                      .TAG_WIDTH  ( TAG_WIDTH       )
                     )
                     REQ_BLOCK_CLUSTERS
                     (
@@ -121,6 +128,7 @@ module XBAR_L2
                       .data_add_i     ( data_add                  ),
                       .data_wen_i     ( data_wen_i                ),
                       .data_wdata_i   ( data_wdata_i              ),
+                      .data_wtag_i    ( data_wtag_i               ),
                       .data_be_i      ( data_be_i                 ),
                       .data_ID_i      ( data_ID                   ),
                       .data_gnt_o     ( data_gnt_from_MEM     [j] ),
@@ -131,6 +139,7 @@ module XBAR_L2
                       .data_add_o     ( data_add_o            [j] ),
                       .data_wen_o     ( data_wen_o            [j] ),
                       .data_wdata_o   ( data_wdata_o          [j] ),
+                      .data_wtag_o    ( data_wtag_o           [j] ),
                       .data_be_o      ( data_be_o             [j] ),
                       .data_ID_o      ( data_ID_o             [j] ),
 
@@ -152,7 +161,8 @@ module XBAR_L2
                       .N_CH1      ( N_CH1          ),
                       .ID_WIDTH   ( ID_WIDTH       ),
                       .DATA_WIDTH ( DATA_WIDTH     ),
-                      .BE_WIDTH   ( BE_WIDTH       )
+                      .BE_WIDTH   ( BE_WIDTH       ),
+                      .TAG_WIDTH  ( TAG_WIDTH      )
                     )
                     REQ_BLOCK_CLUSTERS_FC
                     (
@@ -161,6 +171,7 @@ module XBAR_L2
                       .data_add_CH0_i    ( data_add              [N_CH0-1:0]           ),
                       .data_wen_CH0_i    ( data_wen_i            [N_CH0-1:0]           ),
                       .data_wdata_CH0_i  ( data_wdata_i          [N_CH0-1:0]           ),
+                      .data_wtag_CH0_i   ( data_wtag_i           [N_CH0-1:0]           ),
                       .data_be_CH0_i     ( data_be_i             [N_CH0-1:0]           ),
                       .data_ID_CH0_i     ( data_ID               [N_CH0-1:0]           ),
                       .data_gnt_CH0_o    ( data_gnt_from_MEM [j] [N_CH0-1:0]           ),
@@ -170,6 +181,7 @@ module XBAR_L2
                       .data_add_CH1_i    ( data_add              [N_CH0+N_CH1-1:N_CH0] ),
                       .data_wen_CH1_i    ( data_wen_i            [N_CH0+N_CH1-1:N_CH0] ),
                       .data_wdata_CH1_i  ( data_wdata_i          [N_CH0+N_CH1-1:N_CH0] ),
+                      .data_wtag_CH1_i   ( data_wtag_i           [N_CH0+N_CH1-1:N_CH0] ),
                       .data_be_CH1_i     ( data_be_i             [N_CH0+N_CH1-1:N_CH0] ),
                       .data_ID_CH1_i     ( data_ID               [N_CH0+N_CH1-1:N_CH0] ),
                       .data_gnt_CH1_o    ( data_gnt_from_MEM [j] [N_CH0+N_CH1-1:N_CH0] ),
@@ -180,6 +192,7 @@ module XBAR_L2
                       .data_add_o        ( data_add_o        [j]                       ),
                       .data_wen_o        ( data_wen_o        [j]                       ),
                       .data_wdata_o      ( data_wdata_o      [j]                       ),
+                      .data_wtag_o       ( data_wtag_o       [j]                       ),
                       .data_be_o         ( data_be_o         [j]                       ),
                       .data_ID_o         ( data_ID_o         [j]                       ),
                       .data_gnt_i        ( 1'b1                                        ),
@@ -205,6 +218,7 @@ module XBAR_L2
                       for (j=0;j<N_MASTER; j++)
                       begin : WIRING
                           assign data_r_rdata_o[j] = data_r_rdata_i;
+                          assign data_r_rtag_o[j]  = data_r_rtag_i;
                           assign data_r_valid_o[j] = data_r_valid_to_MASTER[j];
 
                           assign data_ID[j] = 2**j;
@@ -221,16 +235,19 @@ module XBAR_L2
                            .ID         ( 2**j       ),
                            .ID_WIDTH   ( ID_WIDTH   ),
                            .N_SLAVE    ( N_SLAVE    ),
-                           .DATA_WIDTH ( DATA_WIDTH )
+                           .DATA_WIDTH ( DATA_WIDTH ),
+                           .TAG_WIDTH  ( TAG_WIDTH  )
                         )
                         RESP_BLOCK
                         (
                            // Signals from Memory cuts
                            .data_r_valid_i ( data_r_valid_to_MASTER [j] ),
                            .data_r_rdata_i ( data_r_rdata_i             ),
+                           .data_r_rtag_i  ( data_r_rtag_i              ),
                            // Output of the ResponseTree Block
                            .data_r_valid_o ( data_r_valid_o         [j] ),
                            .data_r_rdata_o ( data_r_rdata_o         [j] ),
+                           .data_r_rtag_o  ( data_r_rtag_o          [j] ),
                            // Inputs form MAsters
                            .data_req_i     ( data_req_i             [j] ),
                            .routing_addr_i ( data_routing           [j] ),

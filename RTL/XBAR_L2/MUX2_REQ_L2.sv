@@ -13,13 +13,16 @@ module MUX2_REQ_L2
    parameter ID_WIDTH   = 20,
    parameter ADDR_WIDTH = 32,
    parameter DATA_WIDTH = 64,
-   parameter BE_WIDTH   = DATA_WIDTH/8
+   parameter BYTE_NUM   = DATA_WIDTH/8,
+   parameter BE_WIDTH   = BYTE_NUM,
+   parameter TAG_WIDTH  = BYTE_NUM
 )
 (
    input  logic                            data_req_CH0_i,
    input  logic [ADDR_WIDTH-1:0]           data_add_CH0_i,
    input  logic                            data_wen_CH0_i,
    input  logic [DATA_WIDTH-1:0]           data_wdata_CH0_i,
+   input  logic [TAG_WIDTH-1:0]            data_wtag_CH0_i,
    input  logic [BE_WIDTH-1:0]             data_be_CH0_i,
    input  logic [ID_WIDTH-1:0]             data_ID_CH0_i,
    output logic                            data_gnt_CH0_o,
@@ -30,6 +33,7 @@ module MUX2_REQ_L2
    input  logic [ADDR_WIDTH-1:0]           data_add_CH1_i,
    input  logic                            data_wen_CH1_i,
    input  logic [DATA_WIDTH-1:0]           data_wdata_CH1_i,
+   input  logic [TAG_WIDTH-1:0]            data_wtag_CH1_i,
    input  logic [BE_WIDTH-1:0]             data_be_CH1_i,
    input  logic [ID_WIDTH-1:0]             data_ID_CH1_i,
    output logic                            data_gnt_CH1_o,
@@ -39,6 +43,7 @@ module MUX2_REQ_L2
    output  logic [ADDR_WIDTH-1:0]          data_add_o,
    output  logic                           data_wen_o,
    output  logic [DATA_WIDTH-1:0]          data_wdata_o,
+   output  logic [TAG_WIDTH-1:0]           data_wtag_o,
    output  logic [BE_WIDTH-1:0]            data_be_o,
    output  logic [ID_WIDTH-1:0]            data_ID_o,
    input   logic                           data_gnt_i,
@@ -77,6 +82,7 @@ module MUX2_REQ_L2
          data_add_o = data_add_CH0_i;
          data_wen_o = data_wen_CH0_i;
          data_wdata_o = data_wdata_CH0_i;
+         data_wtag_o  = data_wtag_CH0_i;
          data_be_o = data_be_CH0_i;
          data_ID_o = data_ID_CH0_i;
       end
@@ -85,6 +91,7 @@ module MUX2_REQ_L2
          data_add_o = data_add_CH1_i;
          data_wen_o = data_wen_CH1_i;
          data_wdata_o = data_wdata_CH1_i;
+         data_wtag_o = data_wtag_CH1_i;
          data_be_o = data_be_CH1_i;
          data_ID_o = data_ID_CH1_i;
       end

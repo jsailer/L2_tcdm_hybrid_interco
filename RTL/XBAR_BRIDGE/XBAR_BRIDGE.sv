@@ -18,7 +18,9 @@ module XBAR_BRIDGE
 
     parameter ADDR_WIDTH     = 32,
     parameter DATA_WIDTH     = 32,
-    parameter BE_WIDTH       = DATA_WIDTH/8
+    parameter BYTE_NUM       = DATA_WIDTH/8,
+    parameter BE_WIDTH       = BYTE_NUM,
+    parameter TAG_WIDTH      = BYTE_NUM
 )
 (
     // ---------------- MASTER CH0+CH1 SIDE  --------------------------
@@ -27,6 +29,7 @@ module XBAR_BRIDGE
     input  logic [N_CH0+N_CH1-1:0][ADDR_WIDTH-1:0]         data_add_i,                // Data request Address
     input  logic [N_CH0+N_CH1-1:0]                         data_wen_i,                // Data request type : 0--> Store, 1 --> Load
     input  logic [N_CH0+N_CH1-1:0][DATA_WIDTH-1:0]         data_wdata_i,              // Data request Write data
+    input  logic [N_CH0+N_CH1-1:0][TAG_WIDTH-1:0]          data_wtag_i,               // Data request Write tag bits
     input  logic [N_CH0+N_CH1-1:0][BE_WIDTH-1:0]           data_be_i,                 // Data request Byte enable
     input  logic [N_CH0+N_CH1-1:0][AUX_WIDTH-1:0]          data_aux_i,                // Data request AUX
     output logic [N_CH0+N_CH1-1:0]                         data_gnt_o,                // Data request Grant
@@ -34,6 +37,7 @@ module XBAR_BRIDGE
     // Resp
     output logic [N_CH0+N_CH1-1:0]                         data_r_valid_o,            // Data Response Valid (For LOAD/STORE commands)
     output logic [N_CH0+N_CH1-1:0][DATA_WIDTH-1:0]         data_r_rdata_o,            // Data Response DATA (For LOAD commands)
+    output logic [N_CH0+N_CH1-1:0][TAG_WIDTH-1:0]          data_r_rtag_o,             // Data Response TAG bits (For LOAD commands)
     output logic [N_CH0+N_CH1-1:0]                         data_r_opc_o,              // Response Error
     output logic [N_CH0+N_CH1-1:0][AUX_WIDTH-1:0]          data_r_aux_o,              // Response AUX
 
@@ -43,7 +47,8 @@ module XBAR_BRIDGE
     output  logic [N_SLAVE-1:0]                            data_req_o,                // Data request
     output  logic [N_SLAVE-1:0][ADDR_WIDTH-1:0]            data_add_o,                // Data request Address
     output  logic [N_SLAVE-1:0]                            data_wen_o,                // Data request type : 0--> Store, 1 --> Load
-    output  logic [N_SLAVE-1:0][DATA_WIDTH-1:0]            data_wdata_o,              // Data request Wrire data
+    output  logic [N_SLAVE-1:0][DATA_WIDTH-1:0]            data_wdata_o,              // Data request Write data
+    output  logic [N_SLAVE-1:0][TAG_WIDTH-1:0]             data_wtag_o,               // Data request Write tag bits
     output  logic [N_SLAVE-1:0][BE_WIDTH-1:0]              data_be_o,                 // Data request Byte enable
     output  logic [N_SLAVE-1:0][ID_WIDTH-1:0]              data_ID_o,
     output  logic [N_SLAVE-1:0][AUX_WIDTH-1:0]             data_aux_o,                // Data request AUX
@@ -51,6 +56,7 @@ module XBAR_BRIDGE
 
     // Resp        --> From Mem
     input  logic [N_SLAVE-1:0][DATA_WIDTH-1:0]             data_r_rdata_i,            // Data Response DATA (For LOAD commands)
+    input  logic [N_SLAVE-1:0][TAG_WIDTH-1:0]              data_r_rtag_i,             // Data Response TAG bits (For LOAD commands)
     input  logic [N_SLAVE-1:0]                             data_r_valid_i,            // Data Response: Command is Committed
     input  logic [N_SLAVE-1:0][ID_WIDTH-1:0]               data_r_ID_i,               // Data Response ID: To backroute Response
     input  logic [N_SLAVE-1:0]                             data_r_opc_i,              // Data Response: Error
@@ -134,7 +140,8 @@ module XBAR_BRIDGE
                   .ID_WIDTH           ( ID_WIDTH       ),
                   .DATA_WIDTH         ( DATA_WIDTH     ),
                   .AUX_WIDTH          ( AUX_WIDTH      ),
-                  .BE_WIDTH           ( BE_WIDTH       )
+                  .BE_WIDTH           ( BE_WIDTH       ),
+                  .TAG_WIDTH          ( TAG_WIDTH      )
               )
               i_RequestBlock2CH_BRIDGE
               (
@@ -143,6 +150,7 @@ module XBAR_BRIDGE
                   .data_add_CH0_i     ( data_add_i[N_CH0-1:0]                         ),
                   .data_wen_CH0_i     ( data_wen_i[N_CH0-1:0]                         ),
                   .data_wdata_CH0_i   ( data_wdata_i[N_CH0-1:0]                       ),
+                  .data_wtag_CH0_i    ( data_wtag_i[N_CH0-1:0]                        ),
                   .data_be_CH0_i      ( data_be_i[N_CH0-1:0]                          ),
                   .data_ID_CH0_i      ( data_ID[N_CH0-1:0]                            ),
                   .data_aux_CH0_i     ( data_aux_i[N_CH0-1:0]                         ),
@@ -153,6 +161,7 @@ module XBAR_BRIDGE
                   .data_add_CH1_i     ( data_add_i[N_CH1+N_CH0-1:N_CH0]               ),
                   .data_wen_CH1_i     ( data_wen_i[N_CH1+N_CH0-1:N_CH0]               ),
                   .data_wdata_CH1_i   ( data_wdata_i[N_CH1+N_CH0-1:N_CH0]             ),
+                  .data_wtag_CH1_i    ( data_wtag_i[N_CH1+N_CH0-1:N_CH0]              ),
                   .data_be_CH1_i      ( data_be_i[N_CH1+N_CH0-1:N_CH0]                ),
                   .data_ID_CH1_i      ( data_ID[N_CH1+N_CH0-1:N_CH0]                  ),
                   .data_aux_CH1_i     ( data_aux_i[N_CH1+N_CH0-1:N_CH0]               ),
@@ -164,6 +173,7 @@ module XBAR_BRIDGE
                   .data_add_o         ( data_add_o[j]                                 ),
                   .data_wen_o         ( data_wen_o[j]                                 ),
                   .data_wdata_o       ( data_wdata_o[j]                               ),
+                  .data_wtag_o        ( data_wtag_o[j]                                ),
                   .data_be_o          ( data_be_o[j]                                  ),
                   .data_ID_o          ( data_ID_o[j]                                  ),
                   .data_aux_o         ( data_aux_o[j]                                 ),
@@ -188,7 +198,8 @@ module XBAR_BRIDGE
                   .ID_WIDTH          ( ID_WIDTH                 ),
                   .DATA_WIDTH        ( DATA_WIDTH               ),
                   .AUX_WIDTH         ( AUX_WIDTH                ),
-                  .BE_WIDTH          ( BE_WIDTH                 )
+                  .BE_WIDTH          ( BE_WIDTH                 ),
+                  .TAG_WIDTH         ( TAG_WIDTH                )
               )
               i_RequestBlock1CH_BRIDGE
               (
@@ -197,6 +208,7 @@ module XBAR_BRIDGE
                 .data_add_CH0_i      ( data_add_i               ),
                 .data_wen_CH0_i      ( data_wen_i               ),
                 .data_wdata_CH0_i    ( data_wdata_i             ),
+                .data_wtag_CH0_i     ( data_wtag_i              ),
                 .data_be_CH0_i       ( data_be_i                ),
                 .data_ID_CH0_i       ( data_ID                  ),
                 .data_aux_CH0_i      ( data_aux_i               ),
@@ -208,6 +220,7 @@ module XBAR_BRIDGE
                 .data_add_o          ( data_add_o[j]            ),
                 .data_wen_o          ( data_wen_o[j]            ),
                 .data_wdata_o        ( data_wdata_o[j]          ),
+                .data_wtag_o         ( data_wtag_o[j]           ),
                 .data_be_o           ( data_be_o[j]             ),
                 .data_ID_o           ( data_ID_o[j]             ),
                 .data_aux_o          ( data_aux_o[j]            ),
@@ -231,6 +244,7 @@ module XBAR_BRIDGE
               for (j=0;j<N_CH0+N_CH1; j++)
               begin : WIRING
                   assign data_r_rdata_o[j] = data_r_rdata_i;
+                  assign data_r_rtag_o[j]  = data_r_rtag_i;
                   assign data_r_opc_o[j]   = data_r_opc_i;
                   assign data_r_valid_o[j] = data_r_valid_to_MASTER[j];
 
@@ -249,7 +263,8 @@ module XBAR_BRIDGE
                       .ID_WIDTH           ( ID_WIDTH           ),
                       .N_SLAVE            ( N_SLAVE            ),
                       .AUX_WIDTH          ( AUX_WIDTH          ),
-                      .DATA_WIDTH         ( DATA_WIDTH         )
+                      .DATA_WIDTH         ( DATA_WIDTH         ),
+                      .TAG_WIDTH          ( TAG_WIDTH    )
                   )
                   i_ResponseBlock_BRIDGE
                   (
@@ -257,12 +272,14 @@ module XBAR_BRIDGE
                       // Signals from Memory cuts
                       .data_r_valid_i  ( data_r_valid_to_MASTER[j]  ),
                       .data_r_rdata_i  ( data_r_rdata_i             ),
+                      .data_r_rtag_i   ( data_r_rtag_i              ),
                       .data_r_opc_i    ( data_r_opc_i               ),
                       .data_r_aux_i    ( data_r_aux_i               ),
 
                       // Output of the ResponseTree Block
                       .data_r_valid_o  ( data_r_valid_o[j]          ),
                       .data_r_rdata_o  ( data_r_rdata_o[j]          ),
+                      .data_r_rtag_o   ( data_r_rtag_o[j]           ),
                       .data_r_opc_o    ( data_r_opc_o[j]            ),
                       .data_r_aux_o    ( data_r_aux_o[j]            ),
 

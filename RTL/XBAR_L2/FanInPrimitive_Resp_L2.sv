@@ -10,17 +10,22 @@
 
 module FanInPrimitive_Resp_L2
 #(
-   parameter DATA_WIDTH = 64
+   parameter DATA_WIDTH = 64,
+   parameter BYTE_NUM   = DATA_WIDTH/8,
+   parameter TAG_WIDTH  = BYTE_NUM
 )
 (
    // UPSTREAM SIDE
    input  logic [DATA_WIDTH-1:0]     data_r_rdata0_i,
    input  logic [DATA_WIDTH-1:0]     data_r_rdata1_i,
+   input  logic [TAG_WIDTH-1:0]      data_r_rtag0_i,
+   input  logic [TAG_WIDTH-1:0]      data_r_rtag1_i,
    input  logic                      data_r_valid0_i,
    input  logic                      data_r_valid1_i,
 
    // DOWNSTREAM SIDE
    output logic [DATA_WIDTH-1:0]     data_r_rdata_o,
+   output logic [TAG_WIDTH-1:0]      data_r_rtag_o,
    output logic                      data_r_valid_o
 );
 
@@ -38,8 +43,8 @@ module FanInPrimitive_Resp_L2
    always_comb
    begin : FanOut_MUX2
       case(SEL) //synopsys full_case
-      1'b0: begin data_r_rdata_o  = data_r_rdata0_i; end
-      1'b1: begin data_r_rdata_o  = data_r_rdata1_i; end
+      1'b0: begin data_r_rdata_o  = data_r_rdata0_i; data_r_rtag_o  = data_r_rtag0_i; end
+      1'b1: begin data_r_rdata_o  = data_r_rdata1_i; data_r_rtag_o  = data_r_rtag1_i; end
       endcase
    end
 endmodule

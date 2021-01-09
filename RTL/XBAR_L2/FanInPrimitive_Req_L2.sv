@@ -13,13 +13,17 @@ module FanInPrimitive_Req_L2
    parameter ADDR_WIDTH = 32,
    parameter ID_WIDTH   = 16,
    parameter DATA_WIDTH = 64,
-   parameter BE_WIDTH   = DATA_WIDTH/8
+   parameter BYTE_NUM   = DATA_WIDTH/8,
+   parameter BE_WIDTH   = BYTE_NUM,
+   parameter TAG_WIDTH  = BYTE_NUM
 )
 (
    input logic                                       RR_FLAG,
    // LEFT SIDE
    input  logic [DATA_WIDTH-1:0]                     data_wdata0_i,
    input  logic [DATA_WIDTH-1:0]                     data_wdata1_i,
+   input  logic [TAG_WIDTH-1:0]                      data_wtag0_i,
+   input  logic [TAG_WIDTH-1:0]                      data_wtag1_i,
    input  logic [ADDR_WIDTH-1:0]                     data_add0_i,
    input  logic [ADDR_WIDTH-1:0]                     data_add1_i,
    input  logic                                      data_req0_i,
@@ -35,6 +39,7 @@ module FanInPrimitive_Req_L2
 
    // RIGTH SIDE
    output logic [DATA_WIDTH-1:0]                     data_wdata_o,
+   output logic [TAG_WIDTH-1:0]                      data_wtag_o,
    output logic [ADDR_WIDTH-1:0]                     data_add_o,
    output logic                                      data_req_o,
    output logic [ID_WIDTH-1:0]                       data_ID_o,
@@ -62,6 +67,7 @@ module FanInPrimitive_Req_L2
          1'b0:
          begin //PRIORITY ON CH_0
             data_wdata_o = data_wdata0_i;
+            data_wtag_o  = data_wtag0_i;
             data_add_o   = data_add0_i;
             data_wen_o   = data_wen0_i;
             data_ID_o    = data_ID0_i;
@@ -71,6 +77,7 @@ module FanInPrimitive_Req_L2
          1'b1:
          begin //PRIORITY ON CH_1
             data_wdata_o = data_wdata1_i;
+            data_wtag_o  = data_wtag1_i;
             data_add_o   = data_add1_i;
             data_wen_o   = data_wen1_i;
             data_ID_o    = data_ID1_i;

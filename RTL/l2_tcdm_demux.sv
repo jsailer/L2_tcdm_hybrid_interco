@@ -12,7 +12,9 @@ module l2_tcdm_demux
 #(
     parameter ADDR_WIDTH = 32,
     parameter DATA_WIDTH = 32,
-    parameter BE_WIDTH   = DATA_WIDTH/8,
+    parameter BYTE_NUM   = DATA_WIDTH/8,
+    parameter BE_WIDTH   = BYTE_NUM,
+    parameter TAG_WIDTH  = BYTE_NUM,
     parameter AUX_WIDTH  = 4,
     parameter int unsigned N_PERIPHS  = 2
 )
@@ -26,12 +28,14 @@ module l2_tcdm_demux
     input logic [ADDR_WIDTH - 1:0]       data_add_i,
     input logic                          data_wen_i,
     input logic [DATA_WIDTH - 1:0]       data_wdata_i,
+    input logic [TAG_WIDTH - 1:0]        data_wtag_i,
     input logic [BE_WIDTH - 1:0]         data_be_i,
     input logic [AUX_WIDTH - 1:0]        data_aux_i,
     output logic                         data_gnt_o,
     output logic [AUX_WIDTH-1:0]         data_r_aux_o,    // Data Response AUX
     output logic                         data_r_valid_o,  // Data Response Valid (For LOAD/STORE commands)
     output logic [DATA_WIDTH - 1:0]      data_r_rdata_o,  // Data Response DATA (For LOAD commands)
+    output logic [TAG_WIDTH - 1:0]       data_r_rtag_o,   // Data Response TAG (For LOAD commands)
     output logic                         data_r_opc_o,    // Data Response Error
 
     // Interleaved Region
@@ -39,23 +43,27 @@ module l2_tcdm_demux
     output logic [ADDR_WIDTH - 1:0]      data_add_o_TDCM,
     output logic                         data_wen_o_TDCM,
     output logic [DATA_WIDTH - 1:0]      data_wdata_o_TDCM,
+    output logic [TAG_WIDTH - 1:0]       data_wtag_o_TDCM,
     output logic [BE_WIDTH - 1:0]        data_be_o_TDCM,
 
     input  logic                         data_gnt_i_TDCM,
     input  logic                         data_r_valid_i_TDCM,
     input  logic [DATA_WIDTH - 1:0]      data_r_rdata_i_TDCM,
+    input  logic [TAG_WIDTH - 1:0]       data_r_rtag_i_TDCM,
 
     // Memory Regions : Bridges
     output logic                         data_req_o_PER,
     output logic [ADDR_WIDTH - 1:0]      data_add_o_PER,
     output logic                         data_wen_o_PER,
     output logic [DATA_WIDTH - 1:0]      data_wdata_o_PER,
+    output logic [TAG_WIDTH - 1:0]       data_wtag_o_PER,
     output logic [BE_WIDTH - 1:0]        data_be_o_PER,
     output logic [AUX_WIDTH - 1:0]       data_aux_o_PER,
     input  logic                         data_gnt_i_PER,
 
     input  logic                         data_r_valid_i_PER,
     input  logic [DATA_WIDTH - 1:0]      data_r_rdata_i_PER,
+    input  logic [TAG_WIDTH - 1:0]       data_r_rtag_i_PER,
     input  logic                         data_r_opc_i_PER,
     input  logic [AUX_WIDTH-1:0]         data_r_aux_i_PER,
 
@@ -80,11 +88,13 @@ module l2_tcdm_demux
     assign  data_add_o_TDCM     = data_add_i;
     assign  data_wen_o_TDCM     = data_wen_i;
     assign  data_wdata_o_TDCM   = data_wdata_i;
+    assign  data_wtag_o_TDCM    = data_wtag_i;
     assign  data_be_o_TDCM      = data_be_i;
 
     assign  data_add_o_PER     = data_add_i;
     assign  data_wen_o_PER     = data_wen_i;
     assign  data_wdata_o_PER   = data_wdata_i;
+    assign  data_wtag_o_PER    = data_wtag_i;
     assign  data_be_o_PER      = data_be_i;
     assign  data_aux_o_PER     = data_aux_i;
 
@@ -143,6 +153,7 @@ module l2_tcdm_demux
         data_r_valid_o  = 1'b0;
         data_r_aux_o    = sampled_data_aux;
         data_r_rdata_o  = data_r_rdata_i_TDCM;
+        data_r_rtag_o   = data_r_rtag_i_TDCM;
 
         case(CS)
 
@@ -196,6 +207,7 @@ module l2_tcdm_demux
 
                 data_r_aux_o   = sampled_data_aux;
                 data_r_rdata_o = data_r_rdata_i_TDCM;
+                data_r_rtag_o  = data_r_rtag_i_TDCM;
 
                 if(data_req_i)
                 begin
@@ -244,6 +256,7 @@ module l2_tcdm_demux
                 data_r_valid_o = data_r_valid_i_PER;
                 data_r_aux_o   = data_r_aux_i_PER;;
                 data_r_rdata_o = data_r_rdata_i_PER;
+                data_r_rtag_o  = data_r_rtag_i_PER;
                 data_r_opc_o   = data_r_opc_i_PER;
 
                 if(data_r_valid_i_PER)
@@ -300,6 +313,7 @@ module l2_tcdm_demux
                 data_r_valid_o = 1'b1;
                 data_r_aux_o   = sampled_data_aux;
                 data_r_rdata_o = 32'hBAD_ACCE5;
+                data_r_rtag_o  = '1;
                 NS             = IDLE;
                 data_r_opc_o   = 1'b1;
             end

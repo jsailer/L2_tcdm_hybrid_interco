@@ -12,17 +12,21 @@ module ResponseTree_BRIDGE
 #(
    parameter N_SLAVE     = 16,
    parameter DATA_WIDTH  = 32,
-   parameter AUX_WIDTH   = 8
+   parameter AUX_WIDTH   = 8,
+   parameter BYTE_NUM    = DATA_WIDTH/8,
+   parameter TAG_WIDTH   = BYTE_NUM
 )
 (
    // Response Input Channel 0
    input logic [N_SLAVE-1:0]                   data_r_valid_i,
    input logic [N_SLAVE-1:0][DATA_WIDTH-1:0]   data_r_rdata_i,
+   input logic [N_SLAVE-1:0][TAG_WIDTH-1:0]    data_r_rtag_i,
    input logic [N_SLAVE-1:0]                   data_r_opc_i,
    input logic [N_SLAVE-1:0][AUX_WIDTH-1:0]    data_r_aux_i,
    // Response Output Channel
    output logic                                data_r_valid_o,
    output logic [DATA_WIDTH-1:0]               data_r_rdata_o,
+   output logic [TAG_WIDTH-1:0]                data_r_rtag_o,
    output logic                                data_r_opc_o,
    output logic [AUX_WIDTH-1:0]                data_r_aux_o
 );
@@ -39,6 +43,7 @@ module ResponseTree_BRIDGE
       1:
       begin : MONO_SLAVE
             assign data_r_rdata_o  = data_r_rdata_i;
+            assign data_r_rtag_o   = data_r_rtag_i;
             assign data_r_valid_o  = data_r_valid_i;
             assign data_r_opc_o    = data_r_opc_i;
             assign data_r_aux_o    = data_r_aux_i;
@@ -50,13 +55,16 @@ module ResponseTree_BRIDGE
          FanInPrimitive_Resp_BRIDGE
          #(
             .DATA_WIDTH(DATA_WIDTH),
-            .AUX_WIDTH(AUX_WIDTH)
+            .AUX_WIDTH(AUX_WIDTH),
+            .TAG_WIDTH(TAG_WIDTH)
          )
          i_FanInPrimitive_Resp_BRIDGE
          (
             // RIGTH SIDE
             .data_r_rdata0_i ( data_r_rdata_i[0] ),
             .data_r_rdata1_i ( data_r_rdata_i[1] ),
+            .data_r_rtag0_i  ( data_r_rtag_i[0]  ),
+            .data_r_rtag1_i  ( data_r_rtag_i[1]  ),
             .data_r_valid0_i ( data_r_valid_i[0] ),
             .data_r_valid1_i ( data_r_valid_i[1] ),
             .data_r_opc0_i   ( data_r_opc_i[0]   ),
@@ -65,6 +73,7 @@ module ResponseTree_BRIDGE
             .data_r_aux1_i   ( data_r_aux_i[1]   ),
             // LEFT SIDE
             .data_r_rdata_o  ( data_r_rdata_o    ),
+            .data_r_rtag_o   ( data_r_rtag_o     ),
             .data_r_valid_o  ( data_r_valid_o    ),
             .data_r_opc_o    ( data_r_opc_o      ),
             .data_r_aux_o    ( data_r_aux_o      )
@@ -77,6 +86,7 @@ module ResponseTree_BRIDGE
             //// -------               REQ ARBITRATION TREE WIRES           ----------- ////
             //// ---------------------------------------------------------------------- ////
             logic [DATA_WIDTH-1:0]              data_r_rdata_LEVEL[N_WIRE-1:0];
+            logic [TAG_WIDTH-1:0]               data_r_rtag_LEVEL[N_WIRE-1:0];
             logic                               data_r_valid_LEVEL[N_WIRE-1:0];
             logic                               data_r_opc_LEVEL[N_WIRE-1:0];
             logic [AUX_WIDTH-1:0]               data_r_aux_LEVEL[N_WIRE-1:0];
@@ -91,13 +101,16 @@ module ResponseTree_BRIDGE
                           FanInPrimitive_Resp_BRIDGE
                           #(
                               .DATA_WIDTH(DATA_WIDTH),
-                              .AUX_WIDTH(AUX_WIDTH)
+                              .AUX_WIDTH(AUX_WIDTH),
+                              .TAG_WIDTH(TAG_WIDTH)
                           )
                           i_FanInPrimitive_Resp_BRIDGE
                           (
                              // RIGTH SIDE
                              .data_r_rdata0_i ( data_r_rdata_LEVEL[2*k]    ),
                              .data_r_rdata1_i ( data_r_rdata_LEVEL[2*k+1]  ),
+                             .data_r_rtag0_i  ( data_r_rtag_LEVEL[2*k]     ),
+                             .data_r_rtag1_i  ( data_r_rtag_LEVEL[2*k+1]   ),
                              .data_r_valid0_i ( data_r_valid_LEVEL[2*k]    ),
                              .data_r_valid1_i ( data_r_valid_LEVEL[2*k+1]  ),
                              .data_r_opc0_i   ( data_r_opc_LEVEL[2*k]      ),
@@ -106,6 +119,7 @@ module ResponseTree_BRIDGE
                              .data_r_aux1_i   ( data_r_aux_LEVEL[2*k+1]    ),
                              // RIGTH SIDE
                              .data_r_rdata_o  ( data_r_rdata_o             ),
+                             .data_r_rtag_o   ( data_r_rtag_o              ),
                              .data_r_valid_o  ( data_r_valid_o             ),
                              .data_r_opc_o    ( data_r_opc_o               ),
                              .data_r_aux_o    ( data_r_aux_o               )
@@ -116,13 +130,16 @@ module ResponseTree_BRIDGE
                                   FanInPrimitive_Resp_BRIDGE
                                   #(
                                       .DATA_WIDTH(DATA_WIDTH),
-                                      .AUX_WIDTH(AUX_WIDTH)
+                                      .AUX_WIDTH(AUX_WIDTH),
+                                      .TAG_WIDTH(TAG_WIDTH)
                                   )
                                   i_FanInPrimitive_Resp_BRIDGE
                                   (
                                      // RIGTH SIDE
                                      .data_r_rdata0_i ( data_r_rdata_LEVEL[((2**j)*2-2) + 2*k]    ),
                                      .data_r_rdata1_i ( data_r_rdata_LEVEL[((2**j)*2-2) + 2*k +1] ),
+                                     .data_r_rtag0_i  ( data_r_rtag_LEVEL[((2**j)*2-2) + 2*k]     ),
+                                     .data_r_rtag1_i  ( data_r_rtag_LEVEL[((2**j)*2-2) + 2*k +1]  ),
                                      .data_r_valid0_i ( data_r_valid_LEVEL[((2**j)*2-2) + 2*k]    ),
                                      .data_r_valid1_i ( data_r_valid_LEVEL[((2**j)*2-2) + 2*k+1]  ),
                                      .data_r_opc0_i   ( data_r_opc_LEVEL[((2**j)*2-2) + 2*k]      ),
@@ -132,6 +149,7 @@ module ResponseTree_BRIDGE
 
                                      // LEFT SIDE
                                      .data_r_rdata_o  ( data_r_rdata_LEVEL[((2**(j-1))*2-2) + k]  ),
+                                     .data_r_rtag_o   ( data_r_rtag_LEVEL[((2**(j-1))*2-2) + k]   ),
                                      .data_r_valid_o  ( data_r_valid_LEVEL[((2**(j-1))*2-2) + k]  ),
                                      .data_r_opc_o    ( data_r_opc_LEVEL[((2**(j-1))*2-2) + k]    ),
                                      .data_r_aux_o    ( data_r_aux_LEVEL[((2**(j-1))*2-2) + k]    )
@@ -142,13 +160,16 @@ module ResponseTree_BRIDGE
                                   FanInPrimitive_Resp_BRIDGE
                                   #(
                                       .DATA_WIDTH(DATA_WIDTH),
-                                      .AUX_WIDTH(AUX_WIDTH)
+                                      .AUX_WIDTH(AUX_WIDTH),
+                                      .TAG_WIDTH(TAG_WIDTH)
                                   )
                                   i_FanInPrimitive_Resp_BRIDGE
                                   (
                                      // RIGTH SIDE
                                      .data_r_rdata0_i ( data_r_rdata_i[2*k]                   ),
                                      .data_r_rdata1_i ( data_r_rdata_i[2*k+1]                 ),
+                                     .data_r_rtag0_i  ( data_r_rtag_i[2*k]                    ),
+                                     .data_r_rtag1_i  ( data_r_rtag_i[2*k+1]                  ),
                                      .data_r_valid0_i ( data_r_valid_i[2*k]                   ),
                                      .data_r_valid1_i ( data_r_valid_i[2*k+1]                 ),
                                      .data_r_opc0_i   ( data_r_opc_i[2*k]                     ),
@@ -158,6 +179,7 @@ module ResponseTree_BRIDGE
 
                                      // LEFT SIDE
                                      .data_r_rdata_o  ( data_r_rdata_LEVEL[((2**(j-1))*2-2) + k] ),
+                                     .data_r_rtag_o   ( data_r_rtag_LEVEL[((2**(j-1))*2-2) + k]  ),
                                      .data_r_valid_o  ( data_r_valid_LEVEL[((2**(j-1))*2-2) + k] ),
                                      .data_r_opc_o    ( data_r_opc_LEVEL[((2**(j-1))*2-2) + k]   ),
                                      .data_r_aux_o    ( data_r_aux_LEVEL[((2**(j-1))*2-2) + k]   )

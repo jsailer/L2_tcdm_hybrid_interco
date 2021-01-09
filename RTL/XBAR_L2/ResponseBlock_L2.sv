@@ -14,6 +14,8 @@ module ResponseBlock_L2
    parameter ID_WIDTH   = 20,
    parameter N_SLAVE    = 2,
    parameter DATA_WIDTH = 64,
+   parameter BYTE_NUM   = DATA_WIDTH/8,
+   parameter TAG_WIDTH  = BYTE_NUM,
    parameter ROUT_WIDTH = $clog2(N_SLAVE)
 )
 (
@@ -23,9 +25,11 @@ module ResponseBlock_L2
    // Signals from Memory cuts
    input logic [N_SLAVE-1:0]                       data_r_valid_i,
    input logic [N_SLAVE-1:0][DATA_WIDTH-1:0]       data_r_rdata_i,
+   input logic [N_SLAVE-1:0][TAG_WIDTH-1:0]        data_r_rtag_i,
    // Output of the ResponseTree Block
    output logic                                    data_r_valid_o,
    output logic [DATA_WIDTH-1:0]                   data_r_rdata_o,
+   output logic [TAG_WIDTH-1:0]                    data_r_rtag_o,
 
 
    // -----------------------------------------------------------//
@@ -40,14 +44,16 @@ module ResponseBlock_L2
 );
 
    // Response Tree
-   ResponseTree_L2 #( .N_SLAVE(N_SLAVE), .DATA_WIDTH(DATA_WIDTH))  MEM_RESP_TREE
+   ResponseTree_L2 #( .N_SLAVE(N_SLAVE), .DATA_WIDTH(DATA_WIDTH), .TAG_WIDTH(TAG_WIDTH))  MEM_RESP_TREE
    (
       // Response Input Channel
       .data_r_valid_i(data_r_valid_i),
       .data_r_rdata_i(data_r_rdata_i),
+      .data_r_rtag_i (data_r_rtag_i),
       // Response Output Channel
       .data_r_valid_o(data_r_valid_o),
-      .data_r_rdata_o(data_r_rdata_o)
+      .data_r_rdata_o(data_r_rdata_o),
+      .data_r_rtag_o (data_r_rtag_o)
    );
 
    AddressDecoder_Req_L2 #( .ID_WIDTH(ID_WIDTH), .ID(ID), .N_SLAVE(N_SLAVE) )  ADDR_DEC_REQ

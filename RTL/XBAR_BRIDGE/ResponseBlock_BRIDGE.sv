@@ -15,7 +15,9 @@ module ResponseBlock_BRIDGE
    parameter N_SLAVE        = 16,
    parameter AUX_WIDTH      = 8,
 
-   parameter DATA_WIDTH     = 32
+   parameter DATA_WIDTH     = 32,
+   parameter BYTE_NUM       = DATA_WIDTH/8,
+   parameter TAG_WIDTH      = BYTE_NUM
 )
 (
    // -----------------------------------------------------------//
@@ -24,6 +26,7 @@ module ResponseBlock_BRIDGE
    // Signals from Memory cuts
    input logic [N_SLAVE-1:0]                       data_r_valid_i,
    input logic [N_SLAVE-1:0][DATA_WIDTH-1:0]       data_r_rdata_i,
+   input logic [N_SLAVE-1:0][TAG_WIDTH-1:0]        data_r_rtag_i,
    input logic [N_SLAVE-1:0]                       data_r_opc_i,
    input logic [N_SLAVE-1:0][AUX_WIDTH-1:0]        data_r_aux_i,
 
@@ -31,6 +34,7 @@ module ResponseBlock_BRIDGE
    // Output of the ResponseTree Block
    output logic                                    data_r_valid_o,
    output logic [DATA_WIDTH-1:0]                   data_r_rdata_o,
+   output logic [TAG_WIDTH-1:0]                    data_r_rtag_o,
    output logic                                    data_r_opc_o,
    output logic [AUX_WIDTH-1:0]                    data_r_aux_o,
 
@@ -50,6 +54,7 @@ module ResponseBlock_BRIDGE
 
    logic [2**$clog2(N_SLAVE)-1:0]                  data_r_valid_int;
    logic [2**$clog2(N_SLAVE)-1:0][DATA_WIDTH-1:0]  data_r_rdata_int;
+   logic [2**$clog2(N_SLAVE)-1:0][TAG_WIDTH-1:0]   data_r_rtag_int;
    logic [2**$clog2(N_SLAVE)-1:0]                  data_r_opc_int;
    logic [2**$clog2(N_SLAVE)-1:0][AUX_WIDTH-1:0]   data_r_aux_int;
 
@@ -58,16 +63,19 @@ module ResponseBlock_BRIDGE
       begin : _DUMMY_SLAVE_PORTS_
          logic [2**$clog2(N_SLAVE)-N_SLAVE-1:0]                  data_r_valid_dummy;
          logic [2**$clog2(N_SLAVE)-N_SLAVE-1:0][DATA_WIDTH-1:0]  data_r_rdata_dummy;
+         logic [2**$clog2(N_SLAVE)-N_SLAVE-1:0][TAG_WIDTH-1:0]   data_r_rtag_dummy;
          logic [2**$clog2(N_SLAVE)-N_SLAVE-1:0]                  data_r_opc_dummy;
          logic [2**$clog2(N_SLAVE)-N_SLAVE-1:0][AUX_WIDTH-1:0]   data_r_aux_dummy;
 
          assign data_r_valid_dummy = '0 ;
          assign data_r_rdata_dummy = '0 ;
+         assign data_r_rtag_dummy  = '0 ;
          assign data_r_opc_dummy   = '0 ;
          assign data_r_aux_dummy   = '0 ;
 
          assign data_r_valid_int   = { data_r_valid_dummy ,     data_r_valid_i };
          assign data_r_rdata_int   = { data_r_rdata_dummy ,     data_r_rdata_i };
+         assign data_r_rtag_int    = { data_r_rtag_dummy  ,     data_r_rtag_i  };
          assign data_r_opc_int     = { data_r_opc_dummy   ,     data_r_opc_i   };
          assign data_r_aux_int     = { data_r_aux_dummy   ,     data_r_aux_i   };
       end
@@ -75,6 +83,7 @@ module ResponseBlock_BRIDGE
       begin
           assign data_r_valid_int    = data_r_valid_i;
           assign data_r_rdata_int    = data_r_rdata_i;
+          assign data_r_rtag_int     = data_r_rtag_i;
           assign data_r_opc_int      = data_r_opc_i  ;
           assign data_r_aux_int      = data_r_aux_i  ;
       end
@@ -85,18 +94,21 @@ module ResponseBlock_BRIDGE
    #(
        .N_SLAVE    ( 2**$clog2(N_SLAVE) ),
        .DATA_WIDTH ( DATA_WIDTH         ),
-       .AUX_WIDTH  ( AUX_WIDTH          )
+       .AUX_WIDTH  ( AUX_WIDTH          ),
+       .TAG_WIDTH  ( TAG_WIDTH          )
    )
    i_ResponseTree_BRIDGE
    (
       // Response Input Channel
       .data_r_valid_i ( data_r_valid_int ),
       .data_r_rdata_i ( data_r_rdata_int ),
+      .data_r_rtag_i  ( data_r_rtag_int  ),
       .data_r_opc_i   ( data_r_opc_int   ),
       .data_r_aux_i   ( data_r_aux_int   ),
       // Response Output Channel
       .data_r_valid_o ( data_r_valid_o   ),
       .data_r_rdata_o ( data_r_rdata_o   ),
+      .data_r_rtag_o  ( data_r_rtag_o    ),
       .data_r_opc_o   ( data_r_opc_o     ),
       .data_r_aux_o   ( data_r_aux_o     )
    );

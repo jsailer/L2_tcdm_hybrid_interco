@@ -14,7 +14,9 @@ module ArbitrationTree_BRIDGE
     parameter ID_WIDTH   = 20,
     parameter N_MASTER   = 16,
     parameter DATA_WIDTH = 32,
-    parameter BE_WIDTH   = DATA_WIDTH/8,
+    parameter BYTE_NUM   = DATA_WIDTH/8,
+    parameter BE_WIDTH   = BYTE_NUM,
+    parameter TAG_WIDTH  = BYTE_NUM,
     parameter AUX_WIDTH  = 6,
     parameter MAX_COUNT  = N_MASTER
 )
@@ -27,6 +29,7 @@ module ArbitrationTree_BRIDGE
     input  logic [N_MASTER-1:0][ADDR_WIDTH-1:0]  data_add_i,
     input  logic [N_MASTER-1:0]                  data_wen_i,
     input  logic [N_MASTER-1:0][DATA_WIDTH-1:0]  data_wdata_i,
+    input  logic [N_MASTER-1:0][TAG_WIDTH-1:0]   data_wtag_i,
     input  logic [N_MASTER-1:0][BE_WIDTH-1:0]    data_be_i,
     input  logic [N_MASTER-1:0][ID_WIDTH-1:0]    data_ID_i,
     input  logic [N_MASTER-1:0][AUX_WIDTH-1:0]   data_aux_i,
@@ -37,6 +40,7 @@ module ArbitrationTree_BRIDGE
     output logic [ADDR_WIDTH-1:0]                data_add_o,
     output logic                                 data_wen_o,
     output logic [DATA_WIDTH-1:0]                data_wdata_o,
+    output logic [TAG_WIDTH-1:0]                 data_wtag_o,
     output logic [BE_WIDTH-1:0]                  data_be_o,
     output logic [ID_WIDTH-1:0]                  data_ID_o,
     output logic [AUX_WIDTH-1:0]                 data_aux_o,
@@ -68,7 +72,8 @@ module ArbitrationTree_BRIDGE
                   .ID_WIDTH   ( ID_WIDTH   ),
                   .DATA_WIDTH ( DATA_WIDTH ),
                   .AUX_WIDTH  ( AUX_WIDTH  ),
-                  .BE_WIDTH   ( BE_WIDTH   )
+                  .BE_WIDTH   ( BE_WIDTH   ),
+                  .TAG_WIDTH  ( TAG_WIDTH  )
                 )
                 i_FanInPrimitive_Req_BRIDGE
                 (
@@ -76,6 +81,8 @@ module ArbitrationTree_BRIDGE
                   // LEFT SIDE"
                   .data_wdata0_i ( data_wdata_i[0] ),
                   .data_wdata1_i ( data_wdata_i[1] ),
+                  .data_wtag0_i  ( data_wtag_i[0]  ),
+                  .data_wtag1_i  ( data_wtag_i[1]  ),
                   .data_add0_i   ( data_add_i[0]   ),
                   .data_add1_i   ( data_add_i[1]   ),
                   .data_req0_i   ( data_req_i[0]   ),
@@ -93,12 +100,13 @@ module ArbitrationTree_BRIDGE
 
                   // RIGTH SIDE"
                   .data_wdata_o  ( data_wdata_o    ),
+                  .data_wtag_o   ( data_wtag_o     ),
                   .data_add_o    ( data_add_o      ),
                   .data_req_o    ( data_req_o      ),
                   .data_wen_o    ( data_wen_o      ),
                   .data_ID_o     ( data_ID_o       ),
                   .data_be_o     ( data_be_o       ),
-                  .data_aux_o    ( data_aux_o       ),
+                  .data_aux_o    ( data_aux_o      ),
                   .data_gnt_i    ( data_gnt_i      )
 
                   );
@@ -112,6 +120,7 @@ module ArbitrationTree_BRIDGE
           //// ---------------------------------------------------------------------- ////
           logic [DATA_WIDTH-1:0]      data_wdata_LEVEL[N_WIRE-1:0];
           logic [ADDR_WIDTH-1:0]      data_add_LEVEL[N_WIRE-1:0];
+          logic [TAG_WIDTH-1:0]       data_wtag_LEVEL[N_WIRE-1:0];
           logic                       data_req_LEVEL[N_WIRE-1:0];
           logic                       data_wen_LEVEL[N_WIRE-1:0];
           logic [ID_WIDTH-1:0]        data_ID_LEVEL[N_WIRE-1:0];
@@ -132,7 +141,8 @@ module ArbitrationTree_BRIDGE
                         .ID_WIDTH   ( ID_WIDTH   ),
                         .DATA_WIDTH ( DATA_WIDTH ),
                         .AUX_WIDTH  ( AUX_WIDTH  ),
-                        .BE_WIDTH   ( BE_WIDTH   )
+                        .BE_WIDTH   ( BE_WIDTH   ),
+                        .TAG_WIDTH  ( TAG_WIDTH  )
                     )
                     i_FanInPrimitive_Req_BRIDGE
                     (
@@ -140,6 +150,8 @@ module ArbitrationTree_BRIDGE
                         // LEFT SIDE
                         .data_wdata0_i ( data_wdata_LEVEL [2*k]   ),
                         .data_wdata1_i ( data_wdata_LEVEL [2*k+1] ),
+                        .data_wtag0_i  ( data_wtag_LEVEL  [2*k]   ),
+                        .data_wtag1_i  ( data_wtag_LEVEL  [2*k+1] ),
                         .data_add0_i   ( data_add_LEVEL   [2*k]   ),
                         .data_add1_i   ( data_add_LEVEL   [2*k+1] ),
                         .data_req0_i   ( data_req_LEVEL   [2*k]   ),
@@ -157,6 +169,7 @@ module ArbitrationTree_BRIDGE
 
                         // RIGTH SIDE
                         .data_wdata_o  ( data_wdata_o             ),
+                        .data_wtag_o   ( data_wtag_o              ),
                         .data_add_o    ( data_add_o               ),
                         .data_req_o    ( data_req_o               ),
                         .data_wen_o    ( data_wen_o               ),
@@ -175,7 +188,8 @@ module ArbitrationTree_BRIDGE
                               .ID_WIDTH   ( ID_WIDTH   ),
                               .DATA_WIDTH ( DATA_WIDTH ),
                               .AUX_WIDTH  ( AUX_WIDTH  ),
-                              .BE_WIDTH   ( BE_WIDTH   )
+                              .BE_WIDTH   ( BE_WIDTH   ),
+                              .TAG_WIDTH  ( TAG_WIDTH  )
                           )
                           i_FanInPrimitive_Req_BRIDGE
                           (
@@ -183,6 +197,8 @@ module ArbitrationTree_BRIDGE
                               // LEFT SIDE
                               .data_wdata0_i ( data_wdata_LEVEL [((2**j)*2-2) + 2*k]    ),
                               .data_wdata1_i ( data_wdata_LEVEL [((2**j)*2-2) + 2*k +1] ),
+                              .data_wtag0_i  ( data_wtag_LEVEL  [((2**j)*2-2) + 2*k]    ),
+                              .data_wtag1_i  ( data_wtag_LEVEL  [((2**j)*2-2) + 2*k +1] ),
                               .data_add0_i   ( data_add_LEVEL   [((2**j)*2-2) + 2*k]    ),
                               .data_add1_i   ( data_add_LEVEL   [((2**j)*2-2) + 2*k+1]  ),
                               .data_req0_i   ( data_req_LEVEL   [((2**j)*2-2) + 2*k]    ),
@@ -200,6 +216,7 @@ module ArbitrationTree_BRIDGE
 
                               // RIGTH SIDE
                               .data_wdata_o ( data_wdata_LEVEL  [((2**(j-1))*2-2) + k]  ),
+                              .data_wtag_o  ( data_wtag_LEVEL   [((2**(j-1))*2-2) + k]  ),
                               .data_add_o   ( data_add_LEVEL    [((2**(j-1))*2-2) + k]  ),
                               .data_req_o   ( data_req_LEVEL    [((2**(j-1))*2-2) + k]  ),
                               .data_wen_o   ( data_wen_LEVEL    [((2**(j-1))*2-2) + k]  ),
@@ -218,7 +235,8 @@ module ArbitrationTree_BRIDGE
                                 .ID_WIDTH   ( ID_WIDTH   ),
                                 .DATA_WIDTH ( DATA_WIDTH ),
                                 .AUX_WIDTH  ( AUX_WIDTH  ),
-                                .BE_WIDTH   ( BE_WIDTH   )
+                                .BE_WIDTH   ( BE_WIDTH   ),
+                                .TAG_WIDTH  ( TAG_WIDTH  )
                             )
                             i_FanInPrimitive_Req_BRIDGE
                             (
@@ -226,6 +244,8 @@ module ArbitrationTree_BRIDGE
                                 // LEFT SIDE
                                 .data_wdata0_i( data_wdata_i [2*k]    ),
                                 .data_wdata1_i( data_wdata_i [2*k+1]  ),
+                                .data_wtag0_i ( data_wtag_i  [2*k]    ),
+                                .data_wtag1_i ( data_wtag_i  [2*k+1]  ),
                                 .data_add0_i  ( data_add_i   [2*k]    ),
                                 .data_add1_i  ( data_add_i   [2*k+1]  ),
                                 .data_req0_i  ( data_req_i   [2*k]    ),
@@ -243,6 +263,7 @@ module ArbitrationTree_BRIDGE
 
                                 // RIGTH SIDE
                                 .data_wdata_o ( data_wdata_LEVEL [((2**(j-1))*2-2) + k] ),
+                                .data_wtag_o  ( data_wtag_LEVEL  [((2**(j-1))*2-2) + k] ),
                                 .data_add_o   ( data_add_LEVEL   [((2**(j-1))*2-2) + k] ),
                                 .data_req_o   ( data_req_LEVEL   [((2**(j-1))*2-2) + k] ),
                                 .data_wen_o   ( data_wen_LEVEL   [((2**(j-1))*2-2) + k] ),

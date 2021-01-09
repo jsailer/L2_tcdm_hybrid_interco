@@ -17,7 +17,9 @@ module RequestBlock1CH_BRIDGE
     parameter N_SLAVE    = 16,
     parameter DATA_WIDTH = 32,
     parameter AUX_WIDTH  = 32,
-    parameter BE_WIDTH   = DATA_WIDTH/8
+    parameter BYTE_NUM   = DATA_WIDTH/8,
+    parameter BE_WIDTH   = BYTE_NUM,
+    parameter TAG_WIDTH  = BYTE_NUM
 )
 (
     // CHANNEL CH0 --> (example: Used for xP70s)
@@ -25,6 +27,7 @@ module RequestBlock1CH_BRIDGE
     input  logic [N_CH0-1:0][ADDR_WIDTH-1:0]     data_add_CH0_i,
     input  logic [N_CH0-1:0]                     data_wen_CH0_i,
     input  logic [N_CH0-1:0][DATA_WIDTH-1:0]     data_wdata_CH0_i,
+    input  logic [N_CH0-1:0][TAG_WIDTH-1:0]      data_wtag_CH0_i,
     input  logic [N_CH0-1:0][BE_WIDTH-1:0]       data_be_CH0_i,
     input  logic [N_CH0-1:0][ID_WIDTH-1:0]       data_ID_CH0_i,
     input  logic [N_CH0-1:0][AUX_WIDTH-1:0]      data_aux_CH0_i,
@@ -37,6 +40,7 @@ module RequestBlock1CH_BRIDGE
     output logic [ADDR_WIDTH-1:0]                data_add_o,
     output logic                                 data_wen_o,
     output logic [DATA_WIDTH-1:0]                data_wdata_o,
+    output logic [TAG_WIDTH-1:0]                 data_wtag_o,
     output logic [BE_WIDTH-1:0]                  data_be_o,
     output logic [ID_WIDTH-1:0]                  data_ID_o,
     output logic [AUX_WIDTH-1:0]                 data_aux_o,
@@ -59,6 +63,7 @@ module RequestBlock1CH_BRIDGE
     logic [2**$clog2(N_CH0)-1:0][ADDR_WIDTH-1:0]                data_add_CH0_int;
     logic [2**$clog2(N_CH0)-1:0]                                data_wen_CH0_int;
     logic [2**$clog2(N_CH0)-1:0][DATA_WIDTH-1:0]                data_wdata_CH0_int;
+    logic [2**$clog2(N_CH0)-1:0][TAG_WIDTH-1:0]                 data_wtag_CH0_int;
     logic [2**$clog2(N_CH0)-1:0][BE_WIDTH-1:0]                  data_be_CH0_int;
     logic [2**$clog2(N_CH0)-1:0][ID_WIDTH-1:0]                  data_ID_CH0_int;
     logic [2**$clog2(N_CH0)-1:0][AUX_WIDTH-1:0]                 data_aux_CH0_int;
@@ -77,6 +82,7 @@ module RequestBlock1CH_BRIDGE
               logic [2**$clog2(N_CH0)-N_CH0 -1 :0][ADDR_WIDTH-1:0]                data_add_CH0_dummy;
               logic [2**$clog2(N_CH0)-N_CH0 -1 :0]                                data_wen_CH0_dummy;
               logic [2**$clog2(N_CH0)-N_CH0 -1 :0][DATA_WIDTH-1:0]                data_wdata_CH0_dummy;
+              logic [2**$clog2(N_CH0)-N_CH0 -1 :0][TAG_WIDTH-1:0]                 data_wtag_CH0_dummy;
               logic [2**$clog2(N_CH0)-N_CH0 -1 :0][BE_WIDTH-1:0]                  data_be_CH0_dummy;
               logic [2**$clog2(N_CH0)-N_CH0 -1 :0][ID_WIDTH-1:0]                  data_ID_CH0_dummy;
               logic [2**$clog2(N_CH0)-N_CH0 -1 :0][AUX_WIDTH-1:0]                 data_aux_CH0_dummy;
@@ -87,6 +93,7 @@ module RequestBlock1CH_BRIDGE
               assign data_add_CH0_dummy    = '0 ;
               assign data_wen_CH0_dummy    = '0 ;
               assign data_wdata_CH0_dummy  = '0 ;
+              assign data_wtag_CH0_dummy   = '0 ;
               assign data_be_CH0_dummy     = '0 ;
               assign data_ID_CH0_dummy     = '0 ;
               assign data_aux_CH0_dummy    = '0 ;
@@ -95,6 +102,7 @@ module RequestBlock1CH_BRIDGE
               assign data_add_CH0_int      = {  data_add_CH0_dummy  ,     data_add_CH0_i     };
               assign data_wen_CH0_int      = {  data_wen_CH0_dummy  ,     data_wen_CH0_i     };
               assign data_wdata_CH0_int    = {  data_wdata_CH0_dummy  ,   data_wdata_CH0_i   };
+              assign data_wtag_CH0_int     = {  data_wtag_CH0_dummy  ,    data_wtag_CH0_i    };
               assign data_be_CH0_int       = {  data_be_CH0_dummy  ,      data_be_CH0_i      };
               assign data_ID_CH0_int       = {  data_ID_CH0_dummy  ,      data_ID_CH0_i      };
               assign data_aux_CH0_int      = {  data_aux_CH0_dummy  ,     data_aux_CH0_i     };
@@ -113,6 +121,7 @@ module RequestBlock1CH_BRIDGE
                 assign data_add_CH0_int   = data_add_CH0_i;
                 assign data_wen_CH0_int   = data_wen_CH0_i;
                 assign data_wdata_CH0_int = data_wdata_CH0_i;
+                assign data_wtag_CH0_int  = data_wtag_CH0_i;
                 assign data_be_CH0_int    = data_be_CH0_i;
                 assign data_ID_CH0_int    = data_ID_CH0_i;
                 assign data_aux_CH0_int   = data_aux_CH0_i;
@@ -130,6 +139,7 @@ module RequestBlock1CH_BRIDGE
                 .N_MASTER    ( N_CH0      ),
                 .DATA_WIDTH  ( DATA_WIDTH ),
                 .BE_WIDTH    ( BE_WIDTH   ),
+                .TAG_WIDTH   ( TAG_WIDTH  ),
                 .AUX_WIDTH   ( AUX_WIDTH  ),
                 .MAX_COUNT   ( N_CH0-1    )
             )
@@ -143,6 +153,7 @@ module RequestBlock1CH_BRIDGE
                 .data_add_i   ( data_add_CH0_int   ),
                 .data_wen_i   ( data_wen_CH0_int   ),
                 .data_wdata_i ( data_wdata_CH0_int ),
+                .data_wtag_i  ( data_wtag_CH0_int  ),
                 .data_be_i    ( data_be_CH0_int    ),
                 .data_ID_i    ( data_ID_CH0_int    ),
                 .data_aux_i   ( data_aux_CH0_int   ),
@@ -153,6 +164,7 @@ module RequestBlock1CH_BRIDGE
                 .data_add_o   ( data_add_o         ),
                 .data_wen_o   ( data_wen_o         ),
                 .data_wdata_o ( data_wdata_o       ),
+                .data_wtag_o  ( data_wtag_o        ),
                 .data_be_o    ( data_be_o          ),
                 .data_ID_o    ( data_ID_o          ),
                 .data_aux_o   ( data_aux_o         ),
@@ -165,6 +177,7 @@ module RequestBlock1CH_BRIDGE
             assign data_add_o   = data_add_CH0_int;
             assign data_wen_o   = data_wen_CH0_int;
             assign data_wdata_o = data_wdata_CH0_int;
+            assign data_wtag_o  = data_wtag_CH0_int;
             assign data_be_o    = data_be_CH0_int;
             assign data_ID_o    = data_ID_CH0_int;
             assign data_aux_o   = data_aux_CH0_int;
